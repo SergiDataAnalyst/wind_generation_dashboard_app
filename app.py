@@ -54,8 +54,7 @@ if df is not None:
         selected_tab = st.sidebar.selectbox("Select Task", tabs)
 
         if selected_tab == "Correlation Analysis":
-            bar = st.progress(50)
-            bar.progress(100)
+
             st.subheader("Correlation between Wind Speed and Power Output")
             correlation_coefficient = df[wind_speed_column].corr(df[power_output_column])
             sns.set_palette("viridis")
