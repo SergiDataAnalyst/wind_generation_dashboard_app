@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import seaborn as sns
 import streamlit as st
-# from windrose import WindroseAxes
+#from windrose import windrose
 from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
@@ -20,7 +20,7 @@ def read_file_and_detect_format(file_path):
             print("File format: Excel (.xlsx)")
             return uploaded_df, headers_list
         elif file_extension == '.csv':
-            uploaded_df = pd.read_csv(file_path)
+            uploaded_df = pd.read_csv(file_path, parse_dates=["dateandtime"])
             headers_list = uploaded_df.columns.tolist()
             print("File format: CSV (.csv)")
             return uploaded_df, headers_list
@@ -65,7 +65,7 @@ if df is not None:
     st.dataframe(df.head())
 
     st.write("Select the columns to match your data")
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
         wind_speed_column = st.selectbox("Wind Speed", (None,) + tuple(df.columns))
@@ -74,32 +74,35 @@ if df is not None:
         power_output_column = st.selectbox("Power Output", (None,) + tuple(df.columns))
 
     with col3:
-        theoretical_power_column = st.selectbox("Theoretical Power Curve", (None,) + tuple(df.columns))
+        theoretical_power_column = st.selectbox("Theoretical Power", (None,) + tuple(df.columns))
 
     with col4:
         wind_direction_column = st.selectbox("Wind Direction", (None,) + tuple(df.columns))
 
-    if wind_speed_column and power_output_column and theoretical_power_column and wind_direction_column is not None:
+    with col5:
+        date_column = st.selectbox("Date", (None,) + tuple(df.columns))
 
-        tabs = ["Correlation Analysis", "Power Comparison", "Wind Rose"]
+    if all(column is not None for column in [wind_speed_column, power_output_column, theoretical_power_column,
+                                             wind_direction_column, date_column]):
+        # Your code here
+
+        tabs = ["Correlation Analysis", "Power Comparison", "Wind Rose", "Wasted Power"]
         selected_tab = st.sidebar.selectbox("Select Task", tabs)
 
         if selected_tab == "Correlation Analysis":
 
             st.subheader("Correlation between Wind Speed and Power Output")
             correlation_coefficient = df[wind_speed_column].corr(df[power_output_column])
-            sns.set_palette("viridis")
-            sns.set_style("darkgrid", {"axes.facecolor": "#282c34"})
 
             fig, ax = plt.subplots(figsize=(12, 8))
-            fig.patch.set_facecolor('#282c34')
-            sns.scatterplot(data=df, x=wind_speed_column, y=power_output_column)
+            fig.patch.set_facecolor('#282c34')  # darker plot background
+            sns.scatterplot(data=df, x=wind_speed_column, y=power_output_column, color='#32bb95', alpha=0.6)
             ax.tick_params(axis='x', colors='white')
             ax.tick_params(axis='y', colors='white')
             plt.title(f'Correlation Coefficient: {correlation_coefficient:.2f}', fontsize=16, color='white')
             plt.xlabel('Wind Speed (m/s)', fontsize=14, color='white')
             plt.ylabel('Power Output (kW)', fontsize=14, color='white')
-            sns.lineplot(data=df, x=wind_speed_column, y=theoretical_power_column, color='red') # red plotline
+            sns.lineplot(data=df, x=wind_speed_column, y=theoretical_power_column, color='#9332bb')  # red plotline
             st.pyplot(fig)
 
         # Tab 2: Power Comparison
@@ -159,6 +162,37 @@ if df is not None:
             ax.set_title("Wind Rose Plot", color='white', fontsize='xx-small')
 
             # Display the plot with a dark background using st.pyplot()
+            st.pyplot(fig)
+
+        elif selected_tab == "Wasted Power":
+
+            df2 = df.set_index(pd.DatetimeIndex(df[date_column])).drop(date_column, axis=1)
+            df_resampled = df2.resample('M').mean()  # Add formula details to transform to kWh
+
+            fig, ax = plt.subplots(figsize=(12, 8))  # Use dark background
+            fig.patch.set_facecolor('#282c34')  # dark countour!
+
+            # Bar chart for theoretical power with transparency
+            sns.barplot(x=df_resampled.index, y=df_resampled[theoretical_power_column], data=df_resampled, color='#ffff11',
+                        label='Theoretical Power', alpha=1)
+            sns.barplot(x=df_resampled.index, y=df_resampled[power_output_column], data=df_resampled, color='#3ae3b4',
+                        label='Active Power', alpha=0.9)
+
+            # Formatting
+            plt.title('Comparison of Active Power and Theoretical Power', color='white',
+                      size=16)  # Set title color and size
+
+            plt.ylabel('Power (kW)', color='white', size=16)  # Set y-axis label color and size
+            plt.xticks(rotation=45, color='white', size=14)  # Set x-axis tick color and size
+            plt.yticks(color='white', size=15)  # Set y-axis tick color and size
+            plt.legend(fontsize=12, labelcolor='white')  # Set legend font size
+            plt.tight_layout()
+
+            plt.grid(False)  # Turn off grid lines
+            total_wasted_power = df_resampled[theoretical_power_column].sum() - df_resampled[power_output_column].sum()
+            st.write("Total Wasted Power is:", total_wasted_power)
+
+            # Show the plot
             st.pyplot(fig)
 
     else:
