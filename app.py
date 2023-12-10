@@ -12,7 +12,6 @@ def process_uploaded_file(csv_file):
     if csv_file is not None:
         uploaded_df = pd.read_csv(csv_file)
         headers_list = uploaded_df.columns.tolist()
-
         return uploaded_df, headers_list
 
     else:
@@ -20,13 +19,11 @@ def process_uploaded_file(csv_file):
 
 
 # Streamlit framework
-# Page title
-st.title("Wind Generation Analysis Toolgit pull origin master")
-# Tabs
-# File uploaded
+
+st.title("Wind Generation Analysis Tool")
+
 file_upload = st.sidebar.file_uploader("Upload CSV File", type=["csv"])
 df, header = process_uploaded_file(file_upload)
-
 
 # Load the data if the csv file is uploaded
 if df is not None:
