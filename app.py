@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import seaborn as sns
 import streamlit as st
-#from windrose import windrose
+from windrose import windrose
 from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
@@ -50,7 +50,7 @@ file_upload = st.sidebar.file_uploader("Upload CSV File", type=["csv", "xlsx", "
                                        help='Only supported file formats are CSV, Excel and Text')
 df, header = read_file_and_detect_format(file_upload)
 
-st.sidebar.write("or")
+#  st.sidebar.write("or")
 
 # load_default_data_button = st.button("Try out with sample data 👈🏻")
 
@@ -86,8 +86,9 @@ if df is not None:
                                              wind_direction_column, date_column]):
         # Your code here
 
-        tabs = ["Correlation Analysis", "Power Comparison", "Wind Rose", "Wasted Power"]
+        tabs = ["Correlation Analysis", "Power Comparison", "Wind Rose", "Wasted Power", "Outlier Detection"]
         selected_tab = st.sidebar.selectbox("Select Task", tabs)
+        sns.set_style("darkgrid", {"axes.facecolor": "#282c34"})
 
         if selected_tab == "Correlation Analysis":
 
@@ -109,24 +110,38 @@ if df is not None:
         elif selected_tab == "Power Comparison":
             with st.spinner('Computing...'):
 
-                # Set a beautiful color palette
-                sns.set_palette("viridis")
+                st.subheader("Power Comparison between Actual and Theoretical")
+
+                df['distance'] = np.nan
+
+                for index, row in df.iterrows():
+                    x_scatter = row[wind_speed_column]
+                    y_scatter = row[power_output_column]
+
+                    # Find the corresponding y-coordinate on the line plot (theoretical power curve)
+                    x_line = df[wind_speed_column]
+                    y_line = df[theoretical_power_column]
+
+                    # Calculate the Euclidean distance
+                    distance = np.sqrt((x_line - x_scatter) ** 2 + (y_line - y_scatter) ** 2)
+
+                    # Assign the minimum distance to the 'distance' column
+                    df.at[index, 'distance'] = distance.min()
 
                 # Set a dark background style for a more modern look
                 sns.set_style("darkgrid", {"axes.facecolor": "#282c34"})
 
-                # Plot power comparison between actual and theoretical
-                st.subheader("Power Comparison between Actual and Theoretical")
                 fig, ax = plt.subplots(figsize=(12, 8))
                 fig.patch.set_facecolor('#282c34')
-                sns.scatterplot(x=wind_speed_column, y=power_output_column, data=df, label='Actual Power Output', alpha=0.5,
-                                ax=ax)
+                sns.scatterplot(x=wind_speed_column, y=power_output_column, data=df,
+                                label='Actual Power Output', alpha=0.5, ax=ax)
                 sns.lineplot(x=wind_speed_column, y=theoretical_power_column, data=df,
                              label='Theoretical Power Curve', color='orange', ax=ax)
 
                 ax.tick_params(axis='x', colors='white')
                 ax.tick_params(axis='y', colors='white')
-                plt.title('Comparison between Actual Power Output and Theoretical Power Curve', fontsize=16, color='white')
+                plt.title('Comparison between Actual Power Output and Theoretical Power Curve',
+                          fontsize=16, color='white')
                 plt.xlabel('Wind Speed (m/s)', fontsize=14, color='white')
                 plt.ylabel('Power Output (kW)', fontsize=14, color='white')
                 plt.legend()
@@ -173,10 +188,11 @@ if df is not None:
             fig.patch.set_facecolor('#282c34')  # dark countour!
 
             # Bar chart for theoretical power with transparency
-            sns.barplot(x=df_resampled.index, y=df_resampled[theoretical_power_column], data=df_resampled, color='#ffff11',
-                        label='Theoretical Power', alpha=1)
-            sns.barplot(x=df_resampled.index, y=df_resampled[power_output_column], data=df_resampled, color='#3ae3b4',
-                        label='Active Power', alpha=0.9)
+            sns.barplot(x=df_resampled.index,
+                        y=df_resampled[theoretical_power_column], data=df_resampled,
+                        color='#ffff11', label='Theoretical Power', alpha=1)
+            sns.barplot(x=df_resampled.index, y=df_resampled[power_output_column], data=df_resampled,
+                        color='#3ae3b4', label='Active Power', alpha=0.9)
 
             # Formatting
             plt.title('Comparison of Active Power and Theoretical Power', color='white',
@@ -195,6 +211,29 @@ if df is not None:
             # Show the plot
             st.pyplot(fig)
 
+        elif selected_tab == "Outlier Detection":
+
+            fig, ax = plt.subplots(figsize=(12, 8))  # Use dark background
+            fig.patch.set_facecolor('#282c34')  # dark countour!
+
+            # Define a color palette for better distinction
+            palette = "Set3"
+            print(header)
+
+            for i, each in enumerate(header[1:], 1):
+                plt.subplot(1, 4, i)
+                sns.boxplot(data=df, y=each, palette=palette)
+
+                # Customize the plot
+                plt.title(each, fontsize=14)
+                plt.xlabel('')
+                plt.ylabel(each.replace('_', ' ').title(), fontsize=12, color='white')
+                plt.xticks(fontsize=10, color='white')
+                plt.yticks(fontsize=10, color='white')
+
+            # Adjust layout
+            st.pyplot(fig)
+
     else:
         st.write("Please, match your data to the columns")
 
@@ -203,3 +242,11 @@ if df is not None:
 else:
     st.warning("Upload your data...")
     print(df)
+
+
+
+
+
+
+
+
