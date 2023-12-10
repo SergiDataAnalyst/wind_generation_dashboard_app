@@ -1,29 +1,63 @@
+import os
 import pandas as pd
 import seaborn as sns
 import streamlit as st
-from windrose import WindroseAxes
+# from windrose import WindroseAxes
 from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
 
 
-#  Uploads csv_file and works with it as a df, returns the df and some of the header columns
-def process_uploaded_file(csv_file):
-    if csv_file is not None:
-        uploaded_df = pd.read_csv(csv_file)
-        headers_list = uploaded_df.columns.tolist()
-        return uploaded_df, headers_list
+@st.cache_data
+def read_file_and_detect_format(file_path):
 
-    else:
-        return None, None
+    if file_path is not None:
+        file_extension = os.path.splitext(file_upload.name)[1].lower()
+
+        if file_extension == '.xlsx':
+            uploaded_df = pd.read_excel(file_path)
+            headers_list = uploaded_df.columns.tolist()
+            print("File format: Excel (.xlsx)")
+            return uploaded_df, headers_list
+        elif file_extension == '.csv':
+            uploaded_df = pd.read_csv(file_path)
+            headers_list = uploaded_df.columns.tolist()
+            print("File format: CSV (.csv)")
+            return uploaded_df, headers_list
+        elif file_extension == '.txt':
+            uploaded_df = pd.read_csv(file_path, delimiter=' ')
+            headers_list = uploaded_df.columns.tolist()
+            print("File format: Text (.txt)")
+            return uploaded_df, headers_list
+        else:
+            # Handle unsupported file formats or other actions as needed
+            print("Unsupported file format")
+            return None, None
+    return None, None
+
+
+# @st.cache_data
+# def load_default_data():
+    # default_df = pd.read_csv("wind_generation_data.csv")
+    # return default_df.copy()
 
 
 # Streamlit framework
 
 st.title("Wind Generation Analysis Tool")
 
-file_upload = st.sidebar.file_uploader("Upload CSV File", type=["csv"])
-df, header = process_uploaded_file(file_upload)
+file_upload = st.sidebar.file_uploader("Upload CSV File", type=["csv", "xlsx", "txt"],
+                                       help='Only supported file formats are CSV, Excel and Text')
+df, header = read_file_and_detect_format(file_upload)
+
+st.sidebar.write("or")
+
+# load_default_data_button = st.button("Try out with sample data 👈🏻")
+
+# if load_default_data_button:
+    # st.session_state.df = load_default_data()
+    # st.sidebar.success("Loaded default data successfully!")
+
 
 # Load the data if the csv file is uploaded
 if df is not None:
@@ -59,13 +93,13 @@ if df is not None:
 
             fig, ax = plt.subplots(figsize=(12, 8))
             fig.patch.set_facecolor('#282c34')
-            sns.regplot(x=wind_speed_column, y=power_output_column,
-                        data=df, scatter_kws={'alpha': 0.5, 'color': '#35B778'}, ax=ax)
+            sns.scatterplot(data=df, x=wind_speed_column, y=power_output_column)
             ax.tick_params(axis='x', colors='white')
             ax.tick_params(axis='y', colors='white')
             plt.title(f'Correlation Coefficient: {correlation_coefficient:.2f}', fontsize=16, color='white')
             plt.xlabel('Wind Speed (m/s)', fontsize=14, color='white')
             plt.ylabel('Power Output (kW)', fontsize=14, color='white')
+            sns.lineplot(data=df, x=wind_speed_column, y=theoretical_power_column, color='red') # red plotline
             st.pyplot(fig)
 
         # Tab 2: Power Comparison
@@ -102,13 +136,9 @@ if df is not None:
 
         elif selected_tab == "Wind Rose":
 
-            df = pd.read_csv("wind_generation_data.csv")
-            header = df.columns.tolist()
-            print(header)
-            ws = df[header[2]]
-            wd = df[header[4]]
-
-            column_data = ws.dropna().astype(float)
+            ws = df[wind_speed_column]
+            wd = df[wind_direction_column]
+            ws = ws.dropna().astype(float)
             top_ws_range = ws.quantile(0.9)
             fig, ax = plt.subplots(figsize=(4, 2), subplot_kw=dict(projection="windrose"))
 
@@ -117,7 +147,7 @@ if df is not None:
             ax.contourf(wd, ws, bins=np.arange(0, top_ws_range, 2), cmap=cm.viridis)
 
             # Customize legend
-            legend = ax.legend(title='Legend', fontsize='xx-small', loc='upper right',
+            legend = ax.legend(title='wind speed m/s', fontsize='xx-small', loc='upper right',
                                bbox_to_anchor=(1.5, 0.3, 0.5, 0.5), borderaxespad=-0.1, labelcolor='white')
             legend.get_title().set_color("white")  # Set title color
 
@@ -137,4 +167,5 @@ if df is not None:
     # Tab 1: Correlation Analysis
 
 else:
-    st.warning("Please upload a CSV file")
+    st.warning("Upload your data...")
+    print(df)
