@@ -49,12 +49,13 @@ if df is not None:
         wind_direction_column = st.selectbox("Wind Direction", (None,) + tuple(df.columns))
 
     if wind_speed_column and power_output_column and theoretical_power_column and wind_direction_column is not None:
-        st.write("Click Continue")
 
         tabs = ["Correlation Analysis", "Power Comparison", "Wind Rose"]
         selected_tab = st.sidebar.selectbox("Select Task", tabs)
 
         if selected_tab == "Correlation Analysis":
+            bar = st.progress(50)
+            bar.progress(100)
             st.subheader("Correlation between Wind Speed and Power Output")
             correlation_coefficient = df[wind_speed_column].corr(df[power_output_column])
             sns.set_palette("viridis")
@@ -73,33 +74,35 @@ if df is not None:
 
         # Tab 2: Power Comparison
         elif selected_tab == "Power Comparison":
+            with st.spinner('Computing...'):
 
-            # Set a beautiful color palette
-            sns.set_palette("viridis")
+                # Set a beautiful color palette
+                sns.set_palette("viridis")
 
-            # Set a dark background style for a more modern look
-            sns.set_style("darkgrid", {"axes.facecolor": "#282c34"})
+                # Set a dark background style for a more modern look
+                sns.set_style("darkgrid", {"axes.facecolor": "#282c34"})
 
-            # Plot power comparison between actual and theoretical
-            st.subheader("Power Comparison between Actual and Theoretical")
-            fig, ax = plt.subplots(figsize=(12, 8))
-            fig.patch.set_facecolor('#282c34')
-            sns.scatterplot(x=wind_speed_column, y=power_output_column, data=df, label='Actual Power Output', alpha=0.5,
-                            ax=ax)
-            sns.lineplot(x=wind_speed_column, y=theoretical_power_column, data=df,
-                         label='Theoretical Power Curve', color='orange', ax=ax)
+                # Plot power comparison between actual and theoretical
+                st.subheader("Power Comparison between Actual and Theoretical")
+                fig, ax = plt.subplots(figsize=(12, 8))
+                fig.patch.set_facecolor('#282c34')
+                sns.scatterplot(x=wind_speed_column, y=power_output_column, data=df, label='Actual Power Output', alpha=0.5,
+                                ax=ax)
+                sns.lineplot(x=wind_speed_column, y=theoretical_power_column, data=df,
+                             label='Theoretical Power Curve', color='orange', ax=ax)
 
-            ax.tick_params(axis='x', colors='white')
-            ax.tick_params(axis='y', colors='white')
-            plt.title('Comparison between Actual Power Output and Theoretical Power Curve', fontsize=16, color='white')
-            plt.xlabel('Wind Speed (m/s)', fontsize=14, color='white')
-            plt.ylabel('Power Output (kW)', fontsize=14, color='white')
-            plt.legend()
-            legend = ax.legend()
-            for text in legend.get_texts():
-                text.set_color("white")
+                ax.tick_params(axis='x', colors='white')
+                ax.tick_params(axis='y', colors='white')
+                plt.title('Comparison between Actual Power Output and Theoretical Power Curve', fontsize=16, color='white')
+                plt.xlabel('Wind Speed (m/s)', fontsize=14, color='white')
+                plt.ylabel('Power Output (kW)', fontsize=14, color='white')
+                plt.legend()
+                legend = ax.legend()
+                for text in legend.get_texts():
+                    text.set_color("white")
 
-            st.pyplot(fig)
+                st.pyplot(fig)
+            st.success('Done!')
 
         elif selected_tab == "Wind Rose":
 
@@ -118,7 +121,8 @@ if df is not None:
             ax.contourf(wd, ws, bins=np.arange(0, top_ws_range, 2), cmap=cm.viridis)
 
             # Customize legend
-            legend = ax.legend(title='Legend', fontsize='small', loc='upper right', bbox_to_anchor=(1.05, 1), borderaxespad=-0.)
+            legend = ax.legend(title='Legend', fontsize='xx-small', loc='upper right',
+                               bbox_to_anchor=(1.5, 0.3, 0.5, 0.5), borderaxespad=-0.1, labelcolor='white')
             legend.get_title().set_color("white")  # Set title color
 
             # Set labels and ticks color to white
@@ -126,7 +130,7 @@ if df is not None:
             ax.set_xticklabels(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'], color='white', fontsize='x-large')
 
             # Set titles color to white
-            ax.set_title("Wind Rose Plot", color='white', fontsize='small')
+            ax.set_title("Wind Rose Plot", color='white', fontsize='xx-small')
 
             # Display the plot with a dark background using st.pyplot()
             st.pyplot(fig)

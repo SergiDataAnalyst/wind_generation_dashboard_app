@@ -1,4 +1,4 @@
-﻿Dateandtime,LV_ActivePower_kW,Wind_Speed_m_per_s,Theoretical_Power_Curve_kWh,Wind_Direction
+﻿dateandtime,active_power_kw,wind_speed_ms,theoretical_power_kw,wind_direction
 01 01 2018 00:00,380.0477905,5.31133604,416.3289078,259.9949036
 01 01 2018 00:10,453.7691956,5.672166824,519.9175111,268.6411133
 01 01 2018 00:20,306.3765869,5.216036797,390.9000158,272.5647888
