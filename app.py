@@ -158,7 +158,7 @@ if df is not None:
             wd = df[wind_direction_column]
             ws = ws.dropna().astype(float)
             top_ws_range = ws.quantile(0.9)
-            fig, ax = plt.subplots(figsize=(4, 2), subplot_kw=dict(projection="windrose"))
+            fig, ax = plt.subplots(figsize=(4, 3), subplot_kw=dict(projection="windrose"))
 
             fig.patch.set_facecolor('#282c34')
             # Plot the wind rose
@@ -166,12 +166,12 @@ if df is not None:
 
             # Customize legend
             legend = ax.legend(title='wind speed m/s', fontsize='xx-small', loc='upper right',
-                               bbox_to_anchor=(1.5, 0.3, 0.5, 0.5), borderaxespad=-0.1, labelcolor='white')
+                               bbox_to_anchor=(1.2, 0.3, 0.5, 0.5), borderaxespad=-0.1, labelcolor='white')
             legend.get_title().set_color("white")  # Set title color
 
             # Set labels and ticks color to white
             ax.set_yticklabels([''] * len(ax.get_yticklabels()), color='white', fontsize='x-large')
-            ax.set_xticklabels(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'], color='white', fontsize='x-large')
+            ax.set_xticklabels(['E', 'NE', 'N', 'NW', 'W', 'SW', 'S', 'SE'], color='white', fontsize='medium')
 
             # Set titles color to white
             ax.set_title("Wind Rose Plot", color='white', fontsize='xx-small')
@@ -199,6 +199,7 @@ if df is not None:
                       size=16)  # Set title color and size
 
             plt.ylabel('Power (kW)', color='white', size=16)  # Set y-axis label color and size
+            plt.xlabel('', color='white', size=16)
             plt.xticks(rotation=45, color='white', size=14)  # Set x-axis tick color and size
             plt.yticks(color='white', size=15)  # Set y-axis tick color and size
             plt.legend(fontsize=12, labelcolor='white')  # Set legend font size
@@ -206,7 +207,7 @@ if df is not None:
 
             plt.grid(False)  # Turn off grid lines
             total_wasted_power = df_resampled[theoretical_power_column].sum() - df_resampled[power_output_column].sum()
-            st.write("Total Wasted Power is:", total_wasted_power)
+            st.write("Total Wasted Power is:", total_wasted_power, "kW")
 
             # Show the plot
             st.pyplot(fig)
@@ -216,18 +217,13 @@ if df is not None:
             fig, ax = plt.subplots(figsize=(12, 8))  # Use dark background
             fig.patch.set_facecolor('#282c34')  # dark countour!
 
-            # Define a color palette for better distinction
-            palette = "Set3"
-            print(header)
-
             for i, each in enumerate(header[1:], 1):
                 plt.subplot(1, 4, i)
-                sns.boxplot(data=df, y=each, palette=palette)
+                sns.boxplot(data=df, y=each, widths=0.5, color='#3ae3b4', linecolor="white", linewidth=2)
 
                 # Customize the plot
-                plt.title(each, fontsize=14)
-                plt.xlabel('')
-                plt.ylabel(each.replace('_', ' ').title(), fontsize=12, color='white')
+                plt.title(each, fontsize=14, color='white')
+                plt.ylabel(each.replace('_', ' ').title(), fontsize=0, color='#282c34')
                 plt.xticks(fontsize=10, color='white')
                 plt.yticks(fontsize=10, color='white')
 
@@ -241,7 +237,6 @@ if df is not None:
 
 else:
     st.warning("Upload your data...")
-    print(df)
 
 
 
