@@ -21,7 +21,7 @@ def process_uploaded_file(csv_file):
 
 # Streamlit framework
 # Page title
-st.title("Wind Generation Analysis Tool")
+st.title("Wind Generation Analysis Toolgit pull origin master")
 # Tabs
 # File uploaded
 file_upload = st.sidebar.file_uploader("Upload CSV File", type=["csv"])
