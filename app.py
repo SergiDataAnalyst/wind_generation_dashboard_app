@@ -46,9 +46,14 @@ def read_file_and_detect_format(file_path):
 
 st.title("Wind Generation Analysis Tool")
 
-file_upload = st.sidebar.file_uploader("Upload CSV File", type=["csv", "xlsx", "txt"],
+file_upload = st.sidebar.file_uploader("", type=["csv", "xlsx", "txt"],
                                        help='Only supported file formats are CSV, Excel and Text')
 df, header = read_file_and_detect_format(file_upload)
+
+st.markdown("### Instructions:")
+st.markdown("- Upload your data file in CSV, Excel, or Text format.")
+st.markdown("- Select the columns that match your data.")
+st.markdown("- Perform some data exploration tasks on the sidebar.")
 
 #  st.sidebar.write("or")
 
@@ -162,7 +167,7 @@ if df is not None:
 
             fig.patch.set_facecolor('#282c34')
             # Plot the wind rose
-            ax.contourf(wd, ws, bins=np.arange(0, top_ws_range, 2), cmap=cm.viridis)
+            ax.contourf(wd, ws, opening=0.8, bins=np.arange(0, top_ws_range, 2), cmap=cm.viridis)
 
             # Customize legend
             legend = ax.legend(title='wind speed m/s', fontsize='xx-small', loc='upper right',
@@ -236,7 +241,10 @@ if df is not None:
     # Tab 1: Correlation Analysis
 
 else:
-    st.warning("Upload your data...")
+    st.write("")
+
+
+    #  Future ideas, monitor intime data from a location
 
 
 
